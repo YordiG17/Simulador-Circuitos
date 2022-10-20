@@ -13,66 +13,61 @@ public static class Resolvedor_circuitos {
     return null;
   }
   
-  public static Circuito dijkstra (Circuito circuito, Nodo raiz) {
-    //Circuito malla = new Circuito ();
-    
-    PriorityQueue<Nodo> cola = new PriorityQueue<Nodo>();
-    
-    ArrayList<Nodo> nodos = circuito.obtenerNodos();
-    float[] distancia = new float [nodos.size()];
-    Nodo[] previo = new Nodo [nodos.size()];
-    
-    ArrayList<Nodo> visitados = nodos;
-    ArrayList<Nodo> no_visitados = new ArrayList<Nodo>();  
-    
-    for (int i = 0; i < nodos.size(); i++) {      
-      if (nodos.get(i) == raiz) {
-        cola.add(nodos.get(i));
-        distancia[i] = 0;
-        continue;
-      }
-        
-      distancia[i] = 100;
-      previo[i] = null;
-      cola.add(nodos.get(i));
-    }
-    
-    
-    //Mientras no se vacíe la cola
-    while (cola.size() > 0) {
-      Nodo nodo = cola.remove();
-      ArrayList<Nodo> vecinos = nodo.obtenerVecinos();
+  public static float[] obtenerCorrientes (ArrayList<Circuito> mallas) {
+      double[][] matriz = generarMatrizMalla(mallas);
+      double[][] coeficientes = new double[mallas.size()][mallas.size()];
       
-      for (Nodo n : vecinos) {
-        if (visitados.contains(n))    //Si el nodo ya fue visitado
-          continue;
-          
-        float temp = distancia[nodos.indexOf(n)] + 1;
+      for (int i = 0; i < matriz.length - 1; i++)
+        coeficientes[i] = matriz[i];
+      
+      double[] valores = matriz[matriz.length - 1];
         
-        if (temp < distancia[nodos.indexOf(n)]) {
-        }
+      double[] res = resolverSistema(coeficientes, valores);
+      float[] corrientes = new float[res.length];
+        
+      for(int i = 0; i < res.length; i++) {
+        corrientes[i] = (float)res[i];
+        System.out.print(res[i]+" ");
       }
+      
+      return corrientes;
+  }
+  
+  public static double[] resolverSistema(double[][] matrix, double[] coef) {
+    try {
+      RealMatrix coefficients = new Array2DRowRealMatrix(matrix ,false);
+      DecompositionSolver solver = new LUDecomposition(coefficients).getSolver();
+      RealVector constants = new ArrayRealVector(coef, false);
+      RealVector solution = solver.solve(constants);  
+      return solution.toArray();
+    } catch (SingularMatrixException e) {
+      return new double[0];
     }
-    
-    
-    
-    
-    return null;
   }
   
   //-------------------------|Generar Matriz de Ecuaciones|-------------------------\\
-  public static float[][] generarMatrizMalla (ArrayList<Circuito> mallas) {
-    float[][] ecuaciones = new float[mallas.size()][];
+  public static double[][] generarMatrizMalla (ArrayList<Circuito> mallas) {
+    double[][] ecuaciones = new double[mallas.size() + 1][];
+    ecuaciones[mallas.size()] = new double [mallas.size()];
     
-    for (int i = 0; i < mallas.size(); i++)    //Generar la ecuación de cada malla
-      ecuaciones[i] = generarEcuacionMalla(mallas, i);
+    for (int i = 0; i < mallas.size(); i++) {   //Generar la ecuación de cada malla
+      double[] ecua = generarEcuacionMalla(mallas, i);
+      double[] ecua_cor = new double [ecua.length - 1];
+      
+      for (int j = 0; j < ecua.length - 1; j++) {
+        ecua_cor[j] = ecua[j];
+      }
+      
+      ecuaciones[i] = ecua_cor;    //Guardar coeficientes
+      ecuaciones[mallas.size()][i] = ecua[ecua.length - 1];  //Guardar valores - última fila
+    }
       
     return ecuaciones;
   }
   
   //-------------------------|Generar Ecuación de Malla|-------------------------\\
-  public static float[]generarEcuacionMalla (ArrayList<Circuito> mallas, int pos) {
-    float[] ecuacion = new float[mallas.size() + 1];
+  public static double[]generarEcuacionMalla (ArrayList<Circuito> mallas, int pos) {
+    double[] ecuacion = new double [mallas.size() + 1];
     
     ArrayList<Ramal> ramales = mallas.get(pos).obtenerRamales();
     
