@@ -6,7 +6,8 @@
 |  Desarrolladores:                                              |
 |                  - Juan David Maestre                          |
 |                  - Sebastián Maldonado                         |
-|                  - Jaime Vergara                               |
+|                  - Jaime Vergara 
+|                  - Yordi Gonzalez
 |-------------------------------//-------------------------------|
  
   Descripción de versión:
